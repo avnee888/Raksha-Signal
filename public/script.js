@@ -3,14 +3,13 @@ const socket = io();
 let map, userMarker, watchId, sosId = null;
 const placeMarkers = [];
 
-// Called by the Google Maps script tag once the API loads
-function initMap() {
-  map = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 28.6139, lng: 77.2090 }, // default: New Delhi
-    zoom: 14,
-    styles: [{ elementType: 'geometry', stylers: [{ color: '#1c252b' }] }]
-  });
-}
+// Leaflet map, initialised once on page load (no external API key needed)
+map = L.map('map').setView([28.6139, 77.2090], 14); // default: New Delhi
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 19
+}).addTo(map);
 
 const sosBtn = document.getElementById('sosBtn');
 const endBtn = document.getElementById('endBtn');
@@ -30,7 +29,7 @@ sosBtn.addEventListener('click', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 'demo-user', // swap in a real logged-in user id
+          userId: 'demo-user',
           latitude,
           longitude
         })
@@ -89,20 +88,36 @@ function stopTracking() {
   if (watchId) navigator.geolocation.clearWatch(watchId);
 }
 
+const userIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:16px;height:16px;border-radius:50%;background:#4d7fd6;border:2px solid white;"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8]
+});
+
+const hospitalIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:14px;height:14px;border-radius:50%;background:#e2483a;border:2px solid white;"></div>',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7]
+});
+
+const policeIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:14px;height:14px;border-radius:50%;background:#7a4dd6;border:2px solid white;"></div>',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7]
+});
+
 function centerMap(lat, lng) {
-  const pos = { lat, lng };
+  const pos = [lat, lng];
   if (!map) return;
-  map.setCenter(pos);
+  map.setView(pos);
 
   if (userMarker) {
-    userMarker.setPosition(pos);
+    userMarker.setLatLng(pos);
   } else {
-    userMarker = new google.maps.Marker({
-      position: pos,
-      map,
-      title: 'You',
-      icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-    });
+    userMarker = L.marker(pos, { icon: userIcon, title: 'You' }).addTo(map);
   }
 }
 
@@ -111,7 +126,7 @@ async function fetchNearby(lat, lng) {
   const policeList = document.getElementById('policeList');
   hospitalList.innerHTML = '';
   policeList.innerHTML = '';
-  placeMarkers.forEach(m => m.setMap(null));
+  placeMarkers.forEach(m => map.removeLayer(m));
   placeMarkers.length = 0;
 
   try {
@@ -124,28 +139,28 @@ async function fetchNearby(lat, lng) {
       const li = document.createElement('li');
       li.textContent = `${h.name} — ${h.address}`;
       hospitalList.appendChild(li);
-      placeMarkers.push(new google.maps.Marker({
-        position: h.location, map, title: h.name,
-        icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-      }));
+      placeMarkers.push(
+        L.marker([h.location.lat, h.location.lng], { icon: hospitalIcon, title: h.name })
+          .addTo(map)
+          .bindPopup(h.name)
+      );
     });
 
     police.forEach(p => {
       const li = document.createElement('li');
       li.textContent = `${p.name} — ${p.address}`;
       policeList.appendChild(li);
-      placeMarkers.push(new google.maps.Marker({
-        position: p.location, map, title: p.name,
-        icon: 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png'
-      }));
+      placeMarkers.push(
+        L.marker([p.location.lat, p.location.lng], { icon: policeIcon, title: p.name })
+          .addTo(map)
+          .bindPopup(p.name)
+      );
     });
   } catch (err) {
     console.error('Failed to fetch nearby services:', err);
   }
 }
 
-// Fires when the server (or another connected client) pushes a new
-// location for the SOS this browser has joined.
 socket.on('location-broadcast', (data) => {
   console.log('Live location update:', data);
 });
