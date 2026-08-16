@@ -3,7 +3,13 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true, unique: true },
-  emergencyContacts: [{ type: String }],
+  password: { type: String, required: true },
+  emergencyContacts: [
+    {
+      name: { type: String, required: true },
+      phone: { type: String, required: true }
+    }
+  ],
   createdAt: { type: Date, default: Date.now }
 });
 
