@@ -7,6 +7,38 @@ const TYPE_TAGS = {
   police: '["amenity"="police"]'
 };
 
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter'
+];
+
+function buildQuery(tag, lat, lng, radius) {
+  return `
+    [out:json][timeout:20];
+    (
+      node${tag}(around:${radius},${lat},${lng});
+      way${tag}(around:${radius},${lat},${lng});
+    );
+    out center 20;
+  `;
+}
+
+async function queryOverpass(query) {
+  let lastError;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await axios.post(endpoint, query, {
+        headers: { 'Content-Type': 'text/plain' },
+        timeout: 12000
+      });
+      return response.data;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 router.get('/', async (req, res) => {
   try {
     const { lat, lng, type } = req.query;
@@ -19,33 +51,19 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: 'type must be "hospital" or "police"' });
     }
 
-    const radius = 5000;
-    const query = `
-      [out:json][timeout:15];
-      (
-        node${tag}(around:${radius},${lat},${lng});
-        way${tag}(around:${radius},${lat},${lng});
-      );
-      out center 20;
-    `;
+    const data = await queryOverpass(buildQuery(tag, lat, lng, 5000));
 
-    const response = await axios.post(
-      'https://overpass-api.de/api/interpreter',
-      query,
-      { headers: { 'Content-Type': 'text/plain' } }
-    );
-
-    const results = (response.data.elements || [])
+    const results = (data.elements || [])
       .map(el => {
-        const lat = el.lat || (el.center && el.center.lat);
-        const lon = el.lon || (el.center && el.center.lon);
-        if (!lat || !lon) return null;
+        const elLat = el.lat || (el.center && el.center.lat);
+        const elLon = el.lon || (el.center && el.center.lon);
+        if (!elLat || !elLon) return null;
         const tags = el.tags || {};
         const addressParts = [tags['addr:street'], tags['addr:city']].filter(Boolean);
         return {
           name: tags.name || (type === 'hospital' ? 'Unnamed Hospital' : 'Unnamed Police Station'),
           address: addressParts.join(', ') || 'Address not available',
-          location: { lat, lng: lon }
+          location: { lat: elLat, lng: elLon }
         };
       })
       .filter(Boolean)
@@ -53,7 +71,10 @@ router.get('/', async (req, res) => {
 
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Nearby lookup failed:', err.message);
+    res.status(502).json({
+      error: 'Could not reach the map data service right now. Please try again in a moment.'
+    });
   }
 });
 
