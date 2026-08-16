@@ -1,11 +1,13 @@
 const socket = io();
 
+// ---------- State ----------
 let token = localStorage.getItem('raksha_token') || null;
 let currentUser = null;
 let map, userMarker, watchId, sosId = null;
 let lastPosition = null;
 const placeMarkers = [];
 
+// ---------- DOM refs ----------
 const authSection = document.getElementById('authSection');
 const appSection = document.getElementById('appSection');
 
@@ -29,6 +31,7 @@ const statusEl = document.getElementById('status');
 const alertSection = document.getElementById('alertSection');
 const alertButtons = document.getElementById('alertButtons');
 
+// ---------- Auth UI ----------
 showLoginBtn.addEventListener('click', () => {
   showLoginBtn.classList.add('active');
   showSignupBtn.classList.remove('active');
@@ -112,6 +115,7 @@ async function authedFetch(url, options = {}) {
   return fetch(url, Object.assign({}, options, { headers }));
 }
 
+// Try to resume a session on page load if a token was saved
 (async function tryResumeSession() {
   if (!token) return;
   try {
@@ -130,6 +134,7 @@ async function authedFetch(url, options = {}) {
   }
 })();
 
+// ---------- Emergency contacts ----------
 function renderContacts(contacts) {
   currentUser.emergencyContacts = contacts;
   contactsList.innerHTML = '';
@@ -179,9 +184,10 @@ async function saveContacts(contacts) {
   if (res.ok) renderContacts(user.emergencyContacts);
 }
 
+// ---------- Map (Leaflet + OpenStreetMap, no API key needed) ----------
 function initMapIfNeeded() {
   if (map) return;
-  map = L.map('map').setView([28.6139, 77.2090], 14);
+  map = L.map('map').setView([28.6139, 77.2090], 14); // default: New Delhi
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19
@@ -221,39 +227,60 @@ function centerMap(lat, lng) {
 async function fetchNearby(lat, lng) {
   const hospitalList = document.getElementById('hospitalList');
   const policeList = document.getElementById('policeList');
-  hospitalList.innerHTML = '';
-  policeList.innerHTML = '';
+  hospitalList.innerHTML = '<li class="loading">Loading nearby hospitals…</li>';
+  policeList.innerHTML = '<li class="loading">Loading nearby police stations…</li>';
   placeMarkers.forEach(m => map.removeLayer(m));
   placeMarkers.length = 0;
 
   try {
-    const [hospitals, police] = await Promise.all([
-      fetch(`/api/nearby?lat=${lat}&lng=${lng}&type=hospital`).then(r => r.json()),
-      fetch(`/api/nearby?lat=${lat}&lng=${lng}&type=police`).then(r => r.json())
+    const [hospitalRes, policeRes] = await Promise.all([
+      fetch(`/api/nearby?lat=${lat}&lng=${lng}&type=hospital`),
+      fetch(`/api/nearby?lat=${lat}&lng=${lng}&type=police`)
     ]);
 
-    hospitals.forEach(h => {
-      const li = document.createElement('li');
-      li.textContent = `${h.name} — ${h.address}`;
-      hospitalList.appendChild(li);
-      placeMarkers.push(
-        L.marker([h.location.lat, h.location.lng], { icon: hospitalIcon, title: h.name }).addTo(map).bindPopup(h.name)
-      );
-    });
+    const hospitals = await hospitalRes.json();
+    const police = await policeRes.json();
 
-    police.forEach(p => {
-      const li = document.createElement('li');
-      li.textContent = `${p.name} — ${p.address}`;
-      policeList.appendChild(li);
-      placeMarkers.push(
-        L.marker([p.location.lat, p.location.lng], { icon: policeIcon, title: p.name }).addTo(map).bindPopup(p.name)
-      );
-    });
+    hospitalList.innerHTML = '';
+    policeList.innerHTML = '';
+
+    if (!hospitalRes.ok) {
+      hospitalList.innerHTML = `<li class="error">${hospitals.error || 'Could not load hospitals.'}</li>`;
+    } else if (hospitals.length === 0) {
+      hospitalList.innerHTML = '<li class="empty">No hospitals found nearby.</li>';
+    } else {
+      hospitals.forEach(h => {
+        const li = document.createElement('li');
+        li.textContent = `${h.name} — ${h.address}`;
+        hospitalList.appendChild(li);
+        placeMarkers.push(
+          L.marker([h.location.lat, h.location.lng], { icon: hospitalIcon, title: h.name }).addTo(map).bindPopup(h.name)
+        );
+      });
+    }
+
+    if (!policeRes.ok) {
+      policeList.innerHTML = `<li class="error">${police.error || 'Could not load police stations.'}</li>`;
+    } else if (police.length === 0) {
+      policeList.innerHTML = '<li class="empty">No police stations found nearby.</li>';
+    } else {
+      police.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `${p.name} — ${p.address}`;
+        policeList.appendChild(li);
+        placeMarkers.push(
+          L.marker([p.location.lat, p.location.lng], { icon: policeIcon, title: p.name }).addTo(map).bindPopup(p.name)
+        );
+      });
+    }
   } catch (err) {
     console.error('Failed to fetch nearby services:', err);
+    hospitalList.innerHTML = '<li class="error">Could not load hospitals. Check your connection.</li>';
+    policeList.innerHTML = '<li class="error">Could not load police stations. Check your connection.</li>';
   }
 }
 
+// ---------- SOS flow ----------
 sosBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
     alert('Geolocation is not supported by your browser.');
@@ -329,6 +356,10 @@ function stopTracking() {
   if (watchId) navigator.geolocation.clearWatch(watchId);
 }
 
+// Builds one tap-to-send WhatsApp + SMS button per emergency contact.
+// No paid SMS API is used - this opens the user's own WhatsApp/Messages
+// app with the alert text and a Google Maps link pre-filled; the user
+// taps send themselves.
 function showAlertButtons(lat, lng) {
   const contacts = currentUser.emergencyContacts || [];
   alertButtons.innerHTML = '';
