@@ -151,7 +151,211 @@ main {
   border-left-color: var(--police);
 }
 
+.hidden { display: none !important; }
+
+/* ---------- Auth screen ---------- */
+#authSection {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.auth-tab {
+  flex: 1;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.auth-tab.active {
+  background: var(--police);
+  color: white;
+  border-color: var(--police);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-form input {
+  background: #1c252b;
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.auth-form button[type="submit"] {
+  background: var(--safe);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.auth-error {
+  color: var(--alert);
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+  min-height: 1.2em;
+}
+
+/* ---------- User bar ---------- */
+#userBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px 20px;
+}
+
+#logoutBtn {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+/* ---------- Emergency contacts ---------- */
+#contactsSection {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+#contactsSection h2 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.hint {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 4px 0 12px;
+}
+
+.contact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1c252b;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.contact-row button {
+  background: transparent;
+  color: var(--alert);
+  border: 1px solid var(--alert-dim);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.contact-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.contact-form input {
+  flex: 1;
+  min-width: 140px;
+  background: #1c252b;
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.contact-form button {
+  background: var(--police);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ---------- SOS alert buttons ---------- */
+#alertSection {
+  background: var(--panel);
+  border: 1px solid var(--alert-dim);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+#alertSection h2 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: var(--alert);
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.alert-row span {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.alert-btn {
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: white;
+}
+
+.alert-btn.whatsapp { background: #2fb787; }
+.alert-btn.sms { background: var(--police); }
+
 @media (max-width: 600px) {
   #nearby { grid-template-columns: 1fr; }
   #sosBtn { width: 100px; height: 100px; font-size: 1.2rem; }
+  .contact-form { flex-direction: column; }
+  .alert-row { flex-wrap: wrap; }
 }
