@@ -9,12 +9,13 @@ const TYPE_TAGS = {
 
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter'
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.openstreetmap.fr/api/interpreter'
 ];
 
 function buildQuery(tag, lat, lng, radius) {
   return `
-    [out:json][timeout:20];
+    [out:json][timeout:15];
     (
       node${tag}(around:${radius},${lat},${lng});
       way${tag}(around:${radius},${lat},${lng});
@@ -29,7 +30,7 @@ async function queryOverpass(query) {
     try {
       const response = await axios.post(endpoint, query, {
         headers: { 'Content-Type': 'text/plain' },
-        timeout: 12000
+        timeout: 25000
       });
       return response.data;
     } catch (err) {
