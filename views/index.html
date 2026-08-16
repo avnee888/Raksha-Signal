@@ -14,25 +14,73 @@
   </header>
 
   <main>
-    <section id="controls">
-      <button id="sosBtn">SOS</button>
-      <button id="endBtn" disabled>End Emergency</button>
-      <p id="status">Status: Idle</p>
+    <section id="authSection">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button id="showLoginBtn" class="auth-tab active">Log In</button>
+          <button id="showSignupBtn" class="auth-tab">Sign Up</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <input type="tel" id="loginPhone" placeholder="Phone number" required />
+          <input type="password" id="loginPassword" placeholder="Password" required />
+          <button type="submit">Log In</button>
+          <p id="loginError" class="auth-error"></p>
+        </form>
+
+        <form id="signupForm" class="auth-form hidden">
+          <input type="text" id="signupName" placeholder="Full name" required />
+          <input type="tel" id="signupPhone" placeholder="Phone number" required />
+          <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required minlength="6" />
+          <button type="submit">Create Account</button>
+          <p id="signupError" class="auth-error"></p>
+        </form>
+      </div>
     </section>
 
-    <section id="map-section">
-      <div id="map"></div>
-    </section>
+    <section id="appSection" class="hidden">
+      <div id="userBar">
+        <span id="welcomeText"></span>
+        <button id="logoutBtn">Log Out</button>
+      </div>
 
-    <section id="nearby">
-      <div class="nearby-col">
-        <h2>Nearby Hospitals</h2>
-        <ul id="hospitalList"></ul>
-      </div>
-      <div class="nearby-col">
-        <h2>Nearby Police Stations</h2>
-        <ul id="policeList"></ul>
-      </div>
+      <section id="contactsSection">
+        <h2>Emergency Contacts</h2>
+        <p class="hint">Add the people who should get an alert with your location when you press SOS.</p>
+        <div id="contactsList"></div>
+        <form id="addContactForm" class="contact-form">
+          <input type="text" id="contactName" placeholder="Contact name" required />
+          <input type="tel" id="contactPhone" placeholder="Contact phone (with country code)" required />
+          <button type="submit">Add Contact</button>
+        </form>
+      </section>
+
+      <section id="controls">
+        <button id="sosBtn">SOS</button>
+        <button id="endBtn" disabled>End Emergency</button>
+        <p id="status">Status: Idle</p>
+      </section>
+
+      <section id="alertSection" class="hidden">
+        <h2>Send Alert</h2>
+        <p class="hint">Tap a button below to send your live location to that contact. Your messaging app will open with the message pre-filled.</p>
+        <div id="alertButtons"></div>
+      </section>
+
+      <section id="map-section">
+        <div id="map"></div>
+      </section>
+
+      <section id="nearby">
+        <div class="nearby-col">
+          <h2>Nearby Hospitals</h2>
+          <ul id="hospitalList"></ul>
+        </div>
+        <div class="nearby-col">
+          <h2>Nearby Police Stations</h2>
+          <ul id="policeList"></ul>
+        </div>
+      </section>
     </section>
   </main>
 
