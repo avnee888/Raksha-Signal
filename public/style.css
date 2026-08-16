@@ -146,6 +146,17 @@ main {
   border-left: 3px solid var(--safe);
 }
 
+.nearby-col li.loading,
+.nearby-col li.empty {
+  border-left-color: var(--panel-border);
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.nearby-col li.error {
+  border-left-color: var(--alert);
+  color: var(--alert);
+}
 #police .nearby-col li,
 .nearby-col:last-child li {
   border-left-color: var(--police);
