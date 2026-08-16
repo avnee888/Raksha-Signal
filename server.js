@@ -9,6 +9,7 @@ const connectDB = require('./config/db');
 const sosRoutes = require('./routes/sos');
 const userRoutes = require('./routes/user');
 const nearbyRoutes = require('./routes/nearby');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'views')));
 
 app.set('io', io);
 
+app.use('/api/auth', authRoutes);
 app.use('/api/sos', sosRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/nearby', nearbyRoutes);
