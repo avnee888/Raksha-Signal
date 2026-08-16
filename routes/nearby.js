@@ -29,7 +29,10 @@ async function queryOverpass(query) {
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
       const response = await axios.post(endpoint, query, {
-        headers: { 'Content-Type': 'text/plain' },
+        headers: {
+          'Content-Type': 'text/plain',
+          'User-Agent': 'RakshaSignal/1.0 (emergency safety app)'
+        },
         timeout: 25000
       });
       return response.data;
@@ -72,7 +75,8 @@ router.get('/', async (req, res) => {
 
     res.json(results);
   } catch (err) {
-    console.error('Nearby lookup failed:', err.message);
+    const status = err.response ? err.response.status : 'no response';
+    console.error(`Nearby lookup failed (status: ${status}):`, err.message);
     res.status(502).json({
       error: 'Could not reach the map data service right now. Please try again in a moment.'
     });
