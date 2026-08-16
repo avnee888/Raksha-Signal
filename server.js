@@ -20,6 +20,22 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve index.html dynamically so the Google Maps API key can be
+// injected from the environment instead of being hardcoded in the repo.
+app.get('/', (req, res) => {
+  const fs = require('fs');
+  const indexPath = path.join(__dirname, 'views', 'index.html');
+  fs.readFile(indexPath, 'utf8', (err, html) => {
+    if (err) return res.status(500).send('Failed to load page');
+    const withKey = html.replace(
+      '{{GOOGLE_MAPS_API_KEY}}',
+      process.env.GOOGLE_MAPS_API_KEY || ''
+    );
+    res.send(withKey);
+  });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Make io accessible inside route handlers via req.app.get('io')
