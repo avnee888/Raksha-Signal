@@ -1,19 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const SOS = require('../models/SOS');
+const auth = require('../middleware/auth');
 
-// Create a new SOS alert
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
-    const { userId, latitude, longitude } = req.body;
-    const sos = await SOS.create({ userId, latitude, longitude });
+    const { latitude, longitude } = req.body;
+    const sos = await SOS.create({ userId: req.userId, latitude, longitude });
     res.status(201).json(sos);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// Get a single SOS record
 router.get('/:id', async (req, res) => {
   try {
     const sos = await SOS.findById(req.params.id);
@@ -24,7 +23,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Update live location for an active SOS, and broadcast it over Socket.io
 router.put('/:id/location', async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
@@ -48,7 +46,6 @@ router.put('/:id/location', async (req, res) => {
   }
 });
 
-// End an SOS session
 router.delete('/:id', async (req, res) => {
   try {
     const sos = await SOS.findByIdAndUpdate(
